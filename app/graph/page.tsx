@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ImpactGraph } from "@/components/synccode/impact-graph";
 import { Avatar, SectionLabel } from "@/components/ui/primitives";
 import { TEAM, CHANGES } from "@/lib/data";
@@ -8,6 +9,8 @@ import { useDemo } from "@/lib/store";
 
 export default function GraphPage() {
   const { phase } = useDemo();
+  const [filter, setFilter] = useState("All");
+  const [selected, setSelected] = useState("User API");
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-2">
@@ -17,7 +20,8 @@ export default function GraphPage() {
         </div>
         <span className="sc-mono ml-auto rounded border border-white/10 px-2 py-1 text-[10px] text-muted-foreground">backend-api → 3 consumers → 2 owners</span>
       </div>
-      <ImpactGraph />
+      <div className="flex flex-wrap items-center gap-1.5"><span className="mr-1 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">Filter</span>{["All", "Repositories", "Components", "APIs", "People"].map((f) => <button key={f} onClick={() => setFilter(f)} className={`rounded-md px-2 py-1 text-[11px] transition-colors ${filter === f ? "bg-white/[0.1] text-foreground" : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground"}`}>{f}</button>)}</div>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_310px]"><div className="min-w-0 overflow-x-auto"><ImpactGraph /></div><aside className="sc-panel p-3.5" aria-label="Selected graph node"><SectionLabel>Selected node</SectionLabel><h2 className="sc-mono mt-2 text-[15px] font-semibold">{selected}</h2><dl className="mt-3 space-y-2 text-xs"><div><dt className="text-muted-foreground">Owner</dt><dd className="mt-0.5">Rahul · Backend Engineer</dd></div><div><dt className="text-muted-foreground">Consumers</dt><dd className="sc-mono mt-0.5">3 active</dd></div><div><dt className="text-muted-foreground">Risk</dt><dd className="mt-0.5 text-amber-300">Medium · approval gate</dd></div><div><dt className="text-muted-foreground">Filter</dt><dd className="mt-0.5">{filter}</dd></div></dl><button onClick={() => setSelected(selected === "User API" ? "Frontend / UserService" : "User API")} className="mt-4 text-xs text-violet-200 hover:text-violet-100">Inspect connected node →</button></aside></div>
       <div className="grid gap-4 md:grid-cols-2">
         <section className="sc-panel p-3.5" aria-label="Nodes">
           <SectionLabel>Nodes · state + risk</SectionLabel>

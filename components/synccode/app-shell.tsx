@@ -8,6 +8,7 @@ import { CommandPalette } from "./command-palette";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [navOpen, setNavOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   const onKey = useCallback((e: KeyboardEvent) => {
@@ -25,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <DemoProvider>
       <div className="dark flex min-h-svh bg-background text-foreground">
-        <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
+        <Sidebar open={navOpen} onClose={() => setNavOpen(false)} collapsed={collapsed} onCollapsedChange={setCollapsed} />
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar onMenu={() => setNavOpen(true)} onPalette={() => setPaletteOpen(true)} />
           <main className="mx-auto w-full max-w-[1200px] flex-1 px-3 py-4 sm:px-5 sm:py-5">{children}</main>

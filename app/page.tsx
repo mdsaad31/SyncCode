@@ -10,7 +10,7 @@ import { ChangePipeline, BlockedNotice } from "@/components/synccode/pipeline";
 import { ImpactGraph } from "@/components/synccode/impact-graph";
 import { AIExecutionLog } from "@/components/synccode/ai-log";
 import { RiskBadge } from "@/components/synccode/risk";
-import { CHANGES } from "@/lib/data";
+import { CHANGES, TEAM } from "@/lib/data";
 import { useDemo } from "@/lib/store";
 
 function greeting() {
@@ -46,16 +46,17 @@ export default function Page() {
         </div>
 
         {/* status strip — restrained, not cards */}
-        <div className="sc-panel mt-3 grid grid-cols-3 divide-x divide-white/[0.06]" role="status">
+        <div className="sc-panel mt-3 grid grid-cols-2 divide-x divide-y divide-white/[0.06] sm:grid-cols-4 sm:divide-y-0" role="status">
           {[
             { k: "Active changes", v: "3", sub: "1 breaking · 2 routine" },
             { k: "AI integrations", v: "12", sub: "18/18 tests passing" },
             { k: "Approvals", v: "1", sub: "mobile-app patch", alert: true },
+            { k: "Project health", v: "Healthy", sub: "2 dependency warnings", healthy: true },
           ].map((s) => (
             <div key={s.k} className="px-3.5 py-2.5 sm:px-4">
               <p className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground uppercase">{s.k}</p>
               <p className="mt-0.5 flex items-baseline gap-2">
-                <span className="text-[20px] font-semibold tracking-tight tabular-nums">{s.v}</span>
+                <span className={`text-[20px] font-semibold tracking-tight tabular-nums ${s.healthy ? "text-emerald-200" : ""}`}>{s.v}</span>
                 <span className={`hidden text-[11px] sm:inline ${s.alert ? "text-amber-300" : "text-muted-foreground"}`}>{s.sub}</span>
               </p>
             </div>
@@ -137,6 +138,23 @@ export default function Page() {
             <div className="flex items-center gap-2 text-xs">
               <Check className="size-3.5 text-emerald-300" />
               <span className="text-foreground/85">Recommendation: <strong className="font-medium">safe to integrate</strong> after mobile approval</span>
+            </div>
+          </section>
+
+          <section className="sc-panel overflow-hidden" aria-label="Team activity and team snapshot">
+            <div className="grid sm:grid-cols-2">
+              <div className="p-3.5 sm:border-r sm:border-white/[0.06]">
+                <SectionLabel>Team activity</SectionLabel>
+                <ol className="mt-2 space-y-2 border-l border-white/10 pl-2.5">
+                  {[["09:42", "Rahul changed User API", "text-red-300"], ["09:42", "SyncCode detected 3 consumers", "text-violet-200"], ["09:43", "AI generated frontend patch", "text-emerald-300"], ["09:44", "Validation passed", "text-emerald-300"]].map(([time, event, tone]) => <li key={event} className="flex gap-2 text-[11px]"><span className="sc-mono text-muted-foreground">{time}</span><span className={tone}>{event}</span></li>)}
+                </ol>
+              </div>
+              <div className="p-3.5">
+                <SectionLabel>Team snapshot</SectionLabel>
+                <ul className="mt-2 space-y-2">
+                  {TEAM.map((member) => <li key={member.name} className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-emerald-400" /><div className="min-w-0 flex-1"><p className="text-[11px] font-medium">{member.name} <span className="font-normal text-muted-foreground">· {member.role.replace(" Engineer", "")}</span></p><p className="truncate text-[10px] text-muted-foreground">{member.current}</p></div></li>)}
+                </ul>
+              </div>
             </div>
           </section>
 
