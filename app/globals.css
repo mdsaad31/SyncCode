@@ -193,3 +193,11 @@
   background-size: 28px 28px;
   mask-image: radial-gradient(ellipse 90% 85% at 50% 30%, black 55%, transparent 100%);
 }
+
+/* Monaco diagnostic treatment: quiet enough to preserve code flow, distinct enough to signal contract drift. */
+.monaco-editor .sc-impact-line {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.08), transparent 56%);
+}
+.monaco-editor .sc-impact-glyph {
+  background: radial-gradient(circle, #fbbf24 0 28%, transparent 32%);
+}

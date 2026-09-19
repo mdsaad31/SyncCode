@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Boxes, FolderGit2, GitPullRequest, Layers, Network, Play, Search, Users } from "lucide-react";
+import { ArrowUpRight, Boxes, Code2, FolderGit2, GitPullRequest, Layers, Network, Play, Search, Sparkles, TestTube2, Users } from "lucide-react";
 import { Kbd } from "@/components/ui/primitives";
 import { useDemo } from "@/lib/store";
 import { CHANGES, REPOS, TEAM } from "@/lib/data";
@@ -27,6 +27,15 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
 
   const commands = useMemo(() => {
     const list = [
+      { group: "Code workspace", icon: Code2, label: "Open file", hint: "⌘ P", run: () => router.push("/code?action=search-files") },
+      { group: "Code workspace", icon: Search, label: "Search files", hint: "⌘ P", run: () => router.push("/code?action=search-files") },
+      { group: "Code workspace", icon: TestTube2, label: "Run validation", hint: "⌘ Enter", run: () => router.push("/code?action=run-validation") },
+      { group: "Code workspace", icon: GitPullRequest, label: "Review changes", hint: "frontend-web", run: () => router.push("/code?action=review-changes") },
+      { group: "Code workspace", icon: Network, label: "View impact", hint: "User API", run: () => router.push("/code?action=view-impact") },
+      { group: "Code workspace", icon: Sparkles, label: "Ask Sync AI", hint: "contract migration", run: () => router.push("/code?action=ask-ai") },
+      { group: "Code workspace", icon: Sparkles, label: "Apply AI fix", hint: "suggested", run: () => router.push("/code?action=apply-fix") },
+      { group: "Code workspace", icon: GitPullRequest, label: "Commit changes", hint: "main", run: () => router.push("/code?action=commit") },
+      { group: "Code workspace", icon: FolderGit2, label: "Switch repository", hint: "frontend-web", run: () => router.push("/code") },
       { group: "Navigate", icon: GitPullRequest, label: "Search changes", hint: "3 active", run: () => router.push("/changes") },
       { group: "Navigate", icon: Layers, label: "Open Change Capsule #1042", hint: "#1042", run: () => router.push("/capsules") },
       { group: "Navigate", icon: Network, label: "View impact graph", hint: "graph", run: () => router.push("/impact") },

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Activity, Boxes, CheckSquare, GitPullRequest, LayoutDashboard, Network,
   Plug, Settings, Users, FolderGit2, Layers, X, AppWindow, Braces, PlayCircle,
-  PanelLeftClose, PanelLeftOpen,
+  PanelLeftClose, PanelLeftOpen, Code2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDemo } from "@/lib/store";
@@ -20,6 +20,7 @@ const GROUPS: { label: string; items: { href: string; label: string; icon: typeo
   {
     label: "Development",
     items: [
+      { href: "/code", label: "CODE", icon: Code2 },
       { href: "/changes", label: "Changes", icon: GitPullRequest, badge: "3" },
       { href: "/capsules", label: "Change Capsules", icon: Layers },
       { href: "/impact", label: "Impact Graph", icon: Network },
