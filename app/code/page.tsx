@@ -1,6 +1,18 @@
-import { CodeWorkspace } from "@/components/synccode/code-workspace";
+"use client"
 
-export default async function CodePage({ searchParams }: { searchParams: Promise<{ action?: string }> }) {
-  const params = await searchParams;
-  return <CodeWorkspace action={params.action} />;
+import { Suspense } from "react"
+import { useSearchParams } from "next/navigation"
+import { CodeWorkspace } from "@/components/synccode/code-workspace"
+
+function CodePageInner() {
+  const searchParams = useSearchParams()
+  return <CodeWorkspace action={searchParams.get("action") ?? undefined} />
+}
+
+export default function CodePage() {
+  return (
+    <Suspense>
+      <CodePageInner />
+    </Suspense>
+  )
 }

@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -34,3 +34,28 @@ pnpm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# terraform
+terraform/.terraform/
+terraform/dist/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+tfplan
+terraform/.terraform.lock.hcl
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# secrets & credentials
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account.json
+
