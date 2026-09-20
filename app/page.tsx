@@ -10,7 +10,6 @@ import { ChangePipeline, BlockedNotice } from "@/components/synccode/pipeline";
 import { ImpactGraph } from "@/components/synccode/impact-graph";
 import { AIExecutionLog } from "@/components/synccode/ai-log";
 import { RiskBadge } from "@/components/synccode/risk";
-import { CHANGES, TEAM } from "@/lib/data";
 import { useDemo } from "@/lib/store";
 
 function greeting() {
@@ -21,8 +20,9 @@ function greeting() {
 }
 
 export default function Page() {
-  const { activeStage, completedStages, phase, kind, progress } = useDemo();
-  const capsule = CHANGES[0];
+  const { activeStage, completedStages, phase, kind, progress, changes, team } = useDemo();
+  const capsule = changes[0];
+  const TEAM = team;
 
   return (
     <div className="space-y-4">
@@ -48,10 +48,10 @@ export default function Page() {
         {/* status strip — restrained, not cards */}
         <div className="sc-panel mt-3 grid grid-cols-2 divide-x divide-y divide-white/[0.06] sm:grid-cols-4 sm:divide-y-0" role="status">
           {[
-            { k: "Active changes", v: "3", sub: "1 breaking · 2 routine" },
-            { k: "AI integrations", v: "12", sub: "18/18 tests passing" },
+            { k: "Workspace", v: "frontend-web", sub: "● synchronized", healthy: true },
+            { k: "Sync Agent", v: "Ready", sub: "5 capabilities available", healthy: true },
+            { k: "Active runs", v: "2", sub: "latest completed in 42s" },
             { k: "Approvals", v: "1", sub: "mobile-app patch", alert: true },
-            { k: "Project health", v: "Healthy", sub: "2 dependency warnings", healthy: true },
           ].map((s) => (
             <div key={s.k} className="px-3.5 py-2.5 sm:px-4">
               <p className="text-[10px] font-medium tracking-[0.12em] text-muted-foreground uppercase">{s.k}</p>
@@ -83,7 +83,7 @@ export default function Page() {
               <Link href="/changes" className="ml-auto text-[11px] text-muted-foreground hover:text-foreground">View all</Link>
             </div>
             <ul className="divide-y divide-white/[0.05]">
-              {CHANGES.map((c) => (
+              {changes.map((c) => (
                 <li key={c.id}>
                   <Link href={`/changes/${c.id}`} className="flex items-center gap-2.5 px-3.5 py-2 transition-colors hover:bg-white/[0.025]">
                     <span className={`size-1.5 rounded-full ${c.status === "integrated" ? "bg-emerald-400" : c.status === "blocked" ? "bg-red-400" : "bg-amber-300"}`} aria-hidden />

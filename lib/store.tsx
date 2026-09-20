@@ -1,111 +1,66 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { DEMO_SEQUENCE, HIGH_RISK_SEQUENCE } from "./data";
+import { AGENT_RUNS, CAPABILITIES, WORKSPACE_CONTEXT } from "./agent";
+import { CHANGES, DEMO_SEQUENCE, HIGH_RISK_SEQUENCE, REPOS, TEAM } from "./demo-state";
+import type { Approval, Integration, SyncEvent, SyncEventType, ValidationCheck } from "./domain";
+import { INITIAL_WORKSPACE_FILES, type WorkspaceFile } from "./workspace";
 
 export type DemoKind = "breaking" | "high-risk" | null;
 export type DemoPhase = "idle" | "running" | "done" | "blocked";
-
-interface LogLine {
-  id: number;
-  text: string;
-  time: string;
-  tone: "info" | "ai" | "ok" | "warn" | "err";
-}
+type LogLine = { id: number; text: string; time: string; tone: "info" | "ai" | "ok" | "warn" | "err" };
+type WorkspaceState = typeof WORKSPACE_CONTEXT & { currentFile: string; syncState: string; capabilities: typeof CAPABILITIES; files: WorkspaceFile[]; openFileIds: string[]; activeFileId: string; branch: string; commitState: "clean" | "ready" | "committed" };
+const clone = <T,>(value: T): T => structuredClone(value);
+const initialEvents: SyncEvent[] = [
+  { id: "initial-detected", type: "CHANGE_DETECTED", changeId: "1042", message: "Change #1042 detected on backend-api", time: "8m" },
+  { id: "initial-impact", type: "IMPACT_ANALYSIS_COMPLETED", changeId: "1042", message: "Impact analysis found 3 downstream consumers", time: "7m" },
+  { id: "initial-owners", type: "OWNERS_IDENTIFIED", changeId: "1042", message: "Aqib owns frontend-web UserService", time: "7m" },
+  { id: "initial-approval", type: "APPROVAL_REQUIRED", changeId: "1042", message: "Approval required for mobile downstream patch", time: "2m" },
+];
+const initialNotifications = () => initialEvents.slice(-3).reverse().map((event) => ({ id: event.id, title: event.message, detail: `Change #${event.changeId} · ${event.time}` }));
+const initialApprovals = (): Approval[] => [{ id: "approval-1042", changeId: "1042", status: "pending" }];
+const initialIntegrations = (): Integration[] => [{ id: "integration-1042", changeId: "1042", status: "pending" }];
+const initialValidation = (): ValidationCheck[] => ["TypeScript check", "Unit tests", "Contract tests", "Build"].map((label, index) => ({ id: ["types", "unit", "contract", "build"][index], label, status: "pending" }));
 
 interface DemoContextValue {
-  kind: DemoKind;
-  phase: DemoPhase;
-  activeStage: number; // -1 idle, 0..5 pipeline
-  completedStages: number[];
-  logs: LogLine[];
-  progress: number;
-  runDemo: (kind: Exclude<DemoKind, null>) => void;
-  reset: () => void;
-  approveMobile: boolean;
-  setApproveMobile: (v: boolean) => void;
+  kind: DemoKind; phase: DemoPhase; activeStage: number; completedStages: number[]; logs: LogLine[]; progress: number;
+  changes: typeof CHANGES; team: typeof TEAM; repositories: typeof REPOS; agentRuns: typeof AGENT_RUNS; capabilities: typeof CAPABILITIES;
+  workspace: WorkspaceState; events: SyncEvent[]; notifications: { id: string; title: string; detail: string }[]; validation: ValidationCheck[]; approvals: Approval[]; integrations: Integration[];
+  runDemo: (kind: Exclude<DemoKind, null>) => void; resetDemo: () => void; reset: () => void;
+  openFile: (id: string) => void; updateFile: (id: string, content: string) => void; simulateBreakingChange: () => void; previewFix: () => void; applyFix: () => void; runValidation: () => void; commitWorkspace: () => void;
+  setWorkspaceFiles: (updater: (files: WorkspaceFile[]) => WorkspaceFile[]) => void; setOpenFileIds: (updater: (ids: string[]) => string[]) => void; setActiveFileId: (id: string) => void; setWorkspaceSyncState: (state: string) => void;
+  decideApproval: (decision: "approved" | "rejected") => void; startIntegration: () => void; completeIntegration: () => void; failIntegration: () => void;
 }
-
 const DemoContext = createContext<DemoContextValue | null>(null);
-
-function toneFor(text: string): LogLine["tone"] {
-  if (/BLOCKED|failing|High-risk/i.test(text)) return "err";
-  if (/passed|completed|generated|found|identified|ready/i.test(text)) return "ok";
-  if (/Sync AI|generating|Validation|Risk classified|Impact|Owners/i.test(text)) return "ai";
-  if (/awaiting|approval/i.test(text)) return "warn";
-  return "info";
-}
+const toneFor = (text: string): LogLine["tone"] => /failed|blocked/i.test(text) ? "err" : /approved|completed|generated|identified|passed/i.test(text) ? "ok" : /approval/i.test(text) ? "warn" : /analysis|validation|risk/i.test(text) ? "ai" : "info";
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
-  const [kind, setKind] = useState<DemoKind>(null);
-  const [phase, setPhase] = useState<DemoPhase>("idle");
-  const [activeStage, setActiveStage] = useState(-1);
-  const [completedStages, setCompletedStages] = useState<number[]>([0, 1, 2, 3]);
-  const [logs, setLogs] = useState<LogLine[]>([
-    { id: 0, text: "Sync engine idle · listening for pushes on 4 repositories", time: "now", tone: "info" },
-    { id: 1, text: "Change #1041 auto-integrated · 12/12 tests passed", time: "2h", tone: "ok" },
-  ]);
-  const [progress, setProgress] = useState(34);
-  const [approveMobile, setApproveMobile] = useState(false);
-  const timers = useRef<number[]>([]);
-  const idRef = useRef(10);
-
-  const clear = useCallback(() => {
-    timers.current.forEach((t) => window.clearTimeout(t));
-    timers.current = [];
-  }, []);
-
-  const reset = useCallback(() => {
-    clear();
-    setKind(null);
-    setPhase("idle");
-    setActiveStage(-1);
-    setProgress(34);
-  }, [clear]);
-
-  const runDemo = useCallback(
-    (k: Exclude<DemoKind, null>) => {
-      clear();
-      const seq = k === "breaking" ? DEMO_SEQUENCE : HIGH_RISK_SEQUENCE;
-      setKind(k);
-      setPhase("running");
-      setActiveStage(0);
-      setCompletedStages([]);
-      setProgress(4);
-      const base = Date.now();
-      seq.forEach((step, i) => {
-        const t = window.setTimeout(() => {
-          idRef.current += 1;
-          const elapsed = `${((Date.now() - base) / 1000).toFixed(1)}s`;
-          setLogs((prev) =>
-            [...prev, { id: idRef.current, text: step.log, time: elapsed, tone: toneFor(step.log) }].slice(-30)
-          );
-          setActiveStage(step.stage);
-          setCompletedStages((prev) => Array.from(new Set([...prev, ...Array.from({ length: step.stage }, (_, s) => s)])));
-          setProgress(Math.round(((i + 1) / seq.length) * 100));
-          if (i === seq.length - 1) {
-            setPhase(k === "breaking" ? "done" : "blocked");
-            setCompletedStages((prev) =>
-              k === "breaking" ? [0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4]
-            );
-            setActiveStage(k === "breaking" ? 5 : 5);
-          }
-        }, step.t);
-        timers.current.push(t);
-      });
-    },
-    [clear]
-  );
-
-  const value = useMemo(
-    () => ({ kind, phase, activeStage, completedStages, logs, progress, runDemo, reset, approveMobile, setApproveMobile }),
-    [kind, phase, activeStage, completedStages, logs, progress, runDemo, reset, approveMobile]
-  );
+  const [kind, setKind] = useState<DemoKind>(null); const [phase, setPhase] = useState<DemoPhase>("idle"); const [activeStage, setActiveStage] = useState(-1); const [completedStages, setCompletedStages] = useState<number[]>([0, 1, 2, 3]); const [progress, setProgress] = useState(34);
+  const [logs, setLogs] = useState<LogLine[]>([{ id: 0, text: "Sync engine idle · listening for pushes on 4 repositories", time: "now", tone: "info" }]);
+  const [changes, setChanges] = useState(() => clone(CHANGES)); const [events, setEvents] = useState(() => clone(initialEvents)); const [notifications, setNotifications] = useState(initialNotifications); const [validation, setValidation] = useState(initialValidation); const [approvals, setApprovals] = useState(initialApprovals); const [integrations, setIntegrations] = useState(initialIntegrations);
+  const [workspace, setWorkspace] = useState<WorkspaceState>(() => ({ ...clone(WORKSPACE_CONTEXT), currentFile: "src/services/UserService.ts", syncState: "Synchronized", capabilities: CAPABILITIES, files: clone(INITIAL_WORKSPACE_FILES), openFileIds: ["user-service", "user-type", "profile"], activeFileId: "user-service", branch: "main", commitState: "clean" }));
+  const timers = useRef<number[]>([]); const eventId = useRef(10);
+  const clear = useCallback(() => { timers.current.forEach((id) => window.clearTimeout(id)); timers.current = []; }, []);
+  const emit = useCallback((type: SyncEventType, message: string, changeId = "1042") => { eventId.current += 1; const event = { id: `event-${eventId.current}`, type, changeId, message, time: "now" }; setEvents((items) => [...items, event]); setNotifications((items) => [{ id: event.id, title: message, detail: `Change #${changeId} · now` }, ...items].slice(0, 8)); }, []);
+  const resetDemo = useCallback(() => { clear(); setKind(null); setPhase("idle"); setActiveStage(-1); setCompletedStages([0, 1, 2, 3]); setProgress(34); setLogs([{ id: 0, text: "Sync engine idle · listening for pushes on 4 repositories", time: "now", tone: "info" }]); setChanges(clone(CHANGES)); setEvents(clone(initialEvents)); setNotifications(initialNotifications()); setValidation(initialValidation()); setApprovals(initialApprovals()); setIntegrations(initialIntegrations()); setWorkspace({ ...clone(WORKSPACE_CONTEXT), currentFile: "src/services/UserService.ts", syncState: "Synchronized", capabilities: CAPABILITIES, files: clone(INITIAL_WORKSPACE_FILES), openFileIds: ["user-service", "user-type", "profile"], activeFileId: "user-service", branch: "main", commitState: "clean" }); }, [clear]);
+  const openFile = useCallback((id: string) => setWorkspace((state) => { const file = state.files.find((item) => item.id === id); return file ? { ...state, activeFileId: id, currentFile: file.path, openFileIds: state.openFileIds.includes(id) ? state.openFileIds : [...state.openFileIds, id] } : state; }), []);
+  const setWorkspaceFiles = useCallback((updater: (files: WorkspaceFile[]) => WorkspaceFile[]) => setWorkspace((state) => ({ ...state, files: updater(state.files) })), []);
+  const setOpenFileIds = useCallback((updater: (ids: string[]) => string[]) => setWorkspace((state) => ({ ...state, openFileIds: updater(state.openFileIds) })), []);
+  const setActiveFileId = useCallback((id: string) => openFile(id), [openFile]);
+  const setWorkspaceSyncState = useCallback((syncState: string) => setWorkspace((state) => ({ ...state, syncState })), []);
+  const updateFile = useCallback((id: string, content: string) => setWorkspace((state) => ({ ...state, syncState: "Local changes", commitState: "ready", files: state.files.map((file) => file.id === id ? { ...file, content, status: "modified" } : file) })), []);
+  const simulateBreakingChange = useCallback(() => { setWorkspace((state) => ({ ...state, syncState: "Out of sync", files: state.files.map((file) => ["user-service", "profile", "profile-test"].includes(file.id) ? { ...file, status: "affected" } : file) })); setChanges((items) => items.map((change) => change.id === "1042" ? { ...change, status: "detected" } : change)); emit("CHANGE_DETECTED", "User.name → User.full_name detected in backend-api"); }, [emit]);
+  const previewFix = useCallback(() => setWorkspace((state) => ({ ...state, syncState: "AI fix ready" })), []);
+  const applyFix = useCallback(() => { setWorkspace((state) => ({ ...state, syncState: "Fix ready for validation", commitState: "ready", activeFileId: "user-service", currentFile: "src/services/UserService.ts", files: state.files.map((file) => file.id === "user-service" ? { ...file, content: file.content.replace("name: string", "full_name: string").replace("return user.name", "return user.full_name"), status: "modified" } : file.id === "profile-test" ? { ...file, content: file.content.replace("{ name: 'Aqib' }", "{ full_name: 'Aqib' }"), status: "modified" } : { ...file, status: file.status === "affected" ? "clean" : file.status }) })); setChanges((items) => items.map((change) => change.id === "1042" ? { ...change, status: "fixing" } : change)); emit("PATCH_GENERATED", "AI compatibility fix applied to workspace"); }, [emit]);
+  const runValidation = useCallback(() => { setValidation((checks) => checks.map((check) => ({ ...check, status: "passed" }))); setWorkspace((state) => ({ ...state, syncState: "Validated" })); setChanges((items) => items.map((change) => change.id === "1042" ? { ...change, status: "awaiting-approval", tests: { ...change.tests, passed: change.tests.total } } : change)); emit("VALIDATION_STARTED", "Validation started"); emit("VALIDATION_COMPLETED", "Validation completed · 18/18 tests passed"); }, [emit]);
+  const commitWorkspace = useCallback(() => setWorkspace((state) => ({ ...state, syncState: "Synchronized", commitState: "committed", files: state.files.map((file) => ({ ...file, status: "clean" })) })), []);
+  const decideApproval = useCallback((decision: "approved" | "rejected") => { setApprovals((items) => items.map((item) => item.changeId === "1042" ? { ...item, status: decision } : item)); setIntegrations((items) => items.map((item) => item.changeId === "1042" ? { ...item, status: decision === "approved" ? "approved" : "rejected" } : item)); setChanges((items) => items.map((change) => change.id === "1042" ? { ...change, status: decision === "approved" ? "integrating" : "blocked" } : change)); setWorkspace((state) => ({ ...state, syncState: decision === "approved" ? "Integration approved" : "Approval rejected" })); emit(decision === "approved" ? "APPROVED" : "REJECTED", decision === "approved" ? "Change #1042 approved by Aqib" : "Change #1042 rejected"); }, [emit]);
+  const startIntegration = useCallback(() => { setIntegrations((items) => items.map((item) => item.changeId === "1042" ? { ...item, status: "integrating" } : item)); setChanges((items) => items.map((change) => change.id === "1042" ? { ...change, status: "integrating" } : change)); emit("INTEGRATION_STARTED", "Integration started for Change #1042"); }, [emit]);
+  const completeIntegration = useCallback(() => { setIntegrations((items) => items.map((item) => item.changeId === "1042" ? { ...item, status: "integrated" } : item)); setChanges((items) => items.map((change) => change.id === "1042" ? { ...change, status: "integrated" } : change)); setWorkspace((state) => ({ ...state, syncState: "Integrated" })); emit("INTEGRATION_COMPLETED", "Change #1042 integrated"); }, [emit]);
+  const failIntegration = useCallback(() => { setIntegrations((items) => items.map((item) => item.changeId === "1042" ? { ...item, status: "failed" } : item)); setChanges((items) => items.map((change) => change.id === "1042" ? { ...change, status: "blocked" } : change)); emit("INTEGRATION_FAILED", "Integration failed for Change #1042"); }, [emit]);
+  const runDemo = useCallback((selectedKind: Exclude<DemoKind, null>) => { clear(); const sequence = selectedKind === "breaking" ? DEMO_SEQUENCE : HIGH_RISK_SEQUENCE; const changeId = selectedKind === "breaking" ? "1042" : "1040"; setKind(selectedKind); setPhase("running"); setActiveStage(0); setCompletedStages([]); setProgress(0); sequence.forEach((step, index) => timers.current.push(window.setTimeout(() => { setActiveStage(step.stage); setCompletedStages(Array.from({ length: step.stage }, (_, item) => item)); setProgress(Math.round(((index + 1) / sequence.length) * 100)); setLogs((items) => [...items, { id: index + 1, text: step.log, time: `${step.t / 1000}s`, tone: toneFor(step.log) }]); const types: SyncEventType[] = ["CHANGE_DETECTED", "IMPACT_ANALYSIS_STARTED", "IMPACT_ANALYSIS_COMPLETED", "OWNERS_IDENTIFIED", "PATCH_GENERATED", "VALIDATION_STARTED", "VALIDATION_COMPLETED", "RISK_DECIDED", "APPROVAL_REQUIRED"]; emit(types[Math.min(index, types.length - 1)], step.log, changeId); if (index === sequence.length - 1) { setPhase(selectedKind === "breaking" ? "done" : "blocked"); setChanges((items) => items.map((change) => change.id === changeId ? { ...change, status: selectedKind === "breaking" ? "awaiting-approval" : "blocked" } : change)); } }, step.t))); }, [clear, emit]);
+  const value = useMemo(() => ({ kind, phase, activeStage, completedStages, logs, progress, changes, team: TEAM, repositories: REPOS, agentRuns: AGENT_RUNS, capabilities: CAPABILITIES, workspace, events, notifications, validation, approvals, integrations, runDemo, resetDemo, reset: resetDemo, openFile, updateFile, simulateBreakingChange, previewFix, applyFix, runValidation, commitWorkspace, setWorkspaceFiles, setOpenFileIds, setActiveFileId, setWorkspaceSyncState, decideApproval, startIntegration, completeIntegration, failIntegration }), [kind, phase, activeStage, completedStages, logs, progress, changes, workspace, events, notifications, validation, approvals, integrations, runDemo, resetDemo, openFile, updateFile, simulateBreakingChange, previewFix, applyFix, runValidation, commitWorkspace, setWorkspaceFiles, setOpenFileIds, setActiveFileId, setWorkspaceSyncState, decideApproval, startIntegration, completeIntegration, failIntegration]);
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
-
-export function useDemo() {
-  const ctx = useContext(DemoContext);
-  if (!ctx) throw new Error("useDemo must be used within DemoProvider");
-  return ctx;
-}
+export function useDemo() { const context = useContext(DemoContext); if (!context) throw new Error("useDemo must be used within DemoProvider"); return context; }
+export const useSyncCode = useDemo;

@@ -1,10 +1,12 @@
+"use client";
 import { Avatar, SectionLabel } from "@/components/ui/primitives";
-import { TEAM } from "@/lib/data";
+import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const dot: Record<string, string> = { active: "bg-emerald-400", author: "bg-violet-400", review: "bg-amber-300", idle: "bg-white/25" };
 
 export default function TeamPage() {
+  const { team } = useDemo();
   return (
     <div className="space-y-4">
       <div>
@@ -16,7 +18,7 @@ export default function TeamPage() {
           <span>Developer</span><span className="hidden sm:block">Owned components</span><span className="hidden sm:block">Current work</span><span className="text-right">Load</span>
         </div>
         <ul className="divide-y divide-white/[0.05]">
-          {TEAM.map((t) => (
+          {team.map((t) => (
             <li key={t.name} className="grid grid-cols-[1fr_auto] items-center gap-2 px-3.5 py-2.5 sm:grid-cols-[1.2fr_1.4fr_1fr_auto]">
               <div className="flex min-w-0 items-center gap-2.5">
                 <Avatar initials={t.initials} color={t.color} className="size-7 text-[10px]" />

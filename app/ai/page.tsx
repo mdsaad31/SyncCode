@@ -11,9 +11,10 @@ const RUNS = [
   { id: "#1041", title: "Session TTL 24h → 12h", steps: 6, result: "Integrated · 12/12", tone: "ok" as const },
   { id: "#1040", title: "payments.charge() v2", steps: 6, result: "Blocked by policy", tone: "err" as const },
 ];
+void RUNS;
 
 export default function AIPage() {
-  const { phase } = useDemo();
+  const { phase, agentRuns } = useDemo();
   return (
     <div className="space-y-4">
       <div>
@@ -53,11 +54,11 @@ export default function AIPage() {
           <section className="sc-panel p-3.5" aria-label="Past runs">
             <SectionLabel>Recent runs</SectionLabel>
             <ul className="mt-2 divide-y divide-white/[0.05]">
-              {RUNS.map((r) => (
+              {agentRuns.map((r) => (
                 <li key={r.id} className="flex items-center gap-2 py-2 text-xs">
                   <span className="sc-mono text-muted-foreground">{r.id}</span>
-                  <span className="min-w-0 flex-1 truncate text-foreground/85">{r.title}</span>
-                  <span className={r.tone === "ok" ? "text-emerald-300" : r.tone === "warn" ? "text-amber-300" : "text-red-300"}>{r.result}</span>
+                  <span className="min-w-0 flex-1 truncate text-foreground/85">{r.task}</span>
+                  <span className={r.status === "completed" ? "text-emerald-300" : r.status === "blocked" ? "text-red-300" : "text-amber-300"}>{r.status}</span>
                 </li>
               ))}
             </ul>

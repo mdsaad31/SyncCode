@@ -1,0 +1,15 @@
+{
+  "name": "synccode-infrastructure",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "tsc --noEmit", "synth": "cdk synth" },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.840.0",
+    "@aws-sdk/client-eventbridge": "^3.840.0",
+    "@aws-sdk/client-secrets-manager": "^3.840.0",
+    "@aws-sdk/lib-dynamodb": "^3.840.0",
+    "aws-cdk-lib": "^2.210.0",
+    "constructs": "^10.4.2"
+  },
+  "devDependencies": { "@types/aws-lambda": "^8.10.152", "aws-cdk": "^2.1029.0", "esbuild": "^0.25.6", "typescript": "^5.8.3" }
+}

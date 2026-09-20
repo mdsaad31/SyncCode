@@ -5,14 +5,14 @@ import { usePathname } from "next/navigation";
 import {
   Activity, Boxes, CheckSquare, GitPullRequest, LayoutDashboard, Network,
   Plug, Settings, Users, FolderGit2, Layers, X, AppWindow, Braces, PlayCircle,
-  PanelLeftClose, PanelLeftOpen, Code2,
+  PanelLeftClose, PanelLeftOpen, Code2, Bell, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDemo } from "@/lib/store";
 
 const GROUPS: { label: string; items: { href: string; label: string; icon: typeof LayoutDashboard; badge?: string; alert?: boolean }[] }[] = [
   {
-    label: "Overview",
+    label: "Workspace",
     items: [
       { href: "/", label: "Overview", icon: LayoutDashboard },
     ],
@@ -20,10 +20,11 @@ const GROUPS: { label: string; items: { href: string; label: string; icon: typeo
   {
     label: "Development",
     items: [
-      { href: "/code", label: "CODE", icon: Code2 },
+      { href: "/code", label: "Code", icon: Code2 },
       { href: "/changes", label: "Changes", icon: GitPullRequest, badge: "3" },
       { href: "/capsules", label: "Change Capsules", icon: Layers },
       { href: "/impact", label: "Impact Graph", icon: Network },
+      { href: "/tasks", label: "Tasks", icon: CheckSquare },
       { href: "/integrations", label: "Integrations", icon: Plug },
     ],
   },
@@ -37,11 +38,12 @@ const GROUPS: { label: string; items: { href: string; label: string; icon: typeo
     ],
   },
   {
-    label: "AI & automation",
+    label: "Agent",
     items: [
-      { href: "/ai", label: "AI Activity", icon: Activity },
+      { href: "/agent", label: "Sync Agent", icon: Sparkles },
+      { href: "/agent/tools", label: "Toolbox", icon: Plug },
+      { href: "/agent/runs", label: "Runs", icon: PlayCircle },
       { href: "/approvals", label: "Approvals", icon: Boxes, badge: "1", alert: true },
-      { href: "/runs", label: "Runs", icon: PlayCircle },
     ],
   },
 ];
@@ -53,7 +55,7 @@ export function Sidebar({ open, onClose, collapsed, onCollapsedChange }: { open:
 
   const body = (
     <div className="flex h-full flex-col">
-      <div className={cn("flex h-12 items-center gap-2 border-b border-white/[0.06]", collapsed ? "justify-center px-2" : "px-3.5")}>
+      <div className={cn("flex h-14 items-center gap-2 border-b border-white/[0.06]", collapsed ? "justify-center px-2" : "px-3.5")}>
         <span className="flex size-6 items-center justify-center rounded-md bg-white text-[11px] font-black text-black">S</span>
         {!collapsed && <span className="text-[13px] font-semibold tracking-tight">SyncCode</span>}
         {!collapsed && <span className="sc-mono ml-auto rounded border border-white/10 px-1 text-[9px] text-muted-foreground">v2.4</span>}
@@ -65,7 +67,7 @@ export function Sidebar({ open, onClose, collapsed, onCollapsedChange }: { open:
         </button>
       </div>
 
-      <nav className={cn("flex-1 space-y-4 overflow-y-auto py-3", collapsed ? "px-2" : "px-2.5")} aria-label="Primary">
+      <nav className={cn("flex-1 space-y-5 overflow-y-auto py-4", collapsed ? "px-2" : "px-2.5")} aria-label="Primary">
         {GROUPS.map((g) => (
           <div key={g.label}>
             {!collapsed && <p className="px-1.5 pb-1.5 text-[9px] font-semibold tracking-[0.16em] text-muted-foreground/70 uppercase">{g.label}</p>}
@@ -79,7 +81,7 @@ export function Sidebar({ open, onClose, collapsed, onCollapsedChange }: { open:
                       onClick={onClose}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "group flex items-center gap-2.5 rounded-md px-2 py-[7px] text-[13px] transition-colors",
+                        "group flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] transition-colors",
                         collapsed && "justify-center px-0",
                         active ? "bg-white/[0.07] font-medium text-foreground" : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
                       )}
@@ -100,9 +102,13 @@ export function Sidebar({ open, onClose, collapsed, onCollapsedChange }: { open:
             </ul>
           </div>
         ))}
-        <Link href="/settings" title={collapsed ? "Settings" : undefined} className={cn("flex items-center gap-2.5 rounded-md px-2 py-[7px] text-[13px]", collapsed && "justify-center px-0", path === "/settings" ? "bg-white/[0.07] text-foreground" : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground")}>
+        <div className="border-t border-white/[0.06] pt-3">
+        <Link href="/agent" title={collapsed ? "Activity" : undefined} className={cn("flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px]", collapsed && "justify-center px-0", path === "/agent" ? "bg-white/[0.07] text-foreground" : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground")}><Activity className="size-3.5" /> {!collapsed && "Activity"}</Link>
+        <Link href="/settings" title={collapsed ? "Notifications" : undefined} className={cn("flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px]", collapsed && "justify-center px-0", "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground")}><Bell className="size-3.5" /> {!collapsed && "Notifications"}</Link>
+        <Link href="/settings" title={collapsed ? "Settings" : undefined} className={cn("flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px]", collapsed && "justify-center px-0", path === "/settings" ? "bg-white/[0.07] text-foreground" : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground")}>
           <Settings className="size-3.5" /> {!collapsed && "Settings"}
         </Link>
+        </div>
       </nav>
 
       <div className={cn("border-t border-white/[0.06] p-2.5", collapsed && "p-2")}>
@@ -126,7 +132,7 @@ export function Sidebar({ open, onClose, collapsed, onCollapsedChange }: { open:
 
   return (
     <>
-      <aside className={cn("sticky top-0 hidden h-svh shrink-0 border-r border-white/[0.06] bg-[#0e0e10] transition-[width] duration-200 lg:block", collapsed ? "w-[58px]" : "w-[228px]")} aria-label="Sidebar">
+      <aside className="sticky top-0 hidden h-dvh min-h-0 border-r border-white/[0.06] bg-[#0e0e10] lg:block" aria-label="Sidebar">
         {body}
       </aside>
       {open && (

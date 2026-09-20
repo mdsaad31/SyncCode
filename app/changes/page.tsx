@@ -1,9 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { GitPullRequest } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SectionLabel } from "@/components/ui/primitives";
 import { RiskBadge } from "@/components/synccode/risk";
-import { CHANGES } from "@/lib/data";
+import { useSyncCode } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const statusLabel: Record<string, { text: string; cls: string }> = {
@@ -14,6 +16,7 @@ const statusLabel: Record<string, { text: string; cls: string }> = {
 };
 
 export default function ChangesPage() {
+  const { changes } = useSyncCode();
   return (
     <div className="space-y-4">
       <div>
@@ -30,7 +33,7 @@ export default function ChangesPage() {
           </div>
         </div>
         <ul className="divide-y divide-white/[0.05]">
-          {CHANGES.map((c) => {
+          {changes.map((c) => {
             const s = statusLabel[c.status] ?? statusLabel["validating"];
             return (
               <li key={c.id}>

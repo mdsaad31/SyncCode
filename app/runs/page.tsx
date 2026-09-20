@@ -1,4 +1,4 @@
-import { Check, Clock3, ShieldAlert, Sparkles } from "lucide-react";
+import { Clock3, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const RUNS = [

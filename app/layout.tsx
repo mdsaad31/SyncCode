@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppShell } from "@/components/synccode/app-shell";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
-const fontMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
   title: "SyncCode — When code changes, consequences coordinate",
@@ -16,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={cn("antialiased dark", fontMono.variable, geist.variable)}>
+    <html lang="en" suppressHydrationWarning className={cn("antialiased dark")}>
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <AppShell>{children}</AppShell>

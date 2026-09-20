@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { RiskLevel } from "@/lib/data";
+import type { RiskLevel } from "@/lib/domain";
 
 const map: Record<RiskLevel, { variant: "low" | "medium" | "high"; dot: string }> = {
   LOW: { variant: "low", dot: "bg-emerald-400" },

@@ -1,6 +1,9 @@
+"use client";
 import { Plug } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/primitives";
+import { useDemo } from "@/lib/store";
 
 const INTEG = [
   { n: "GitHub", d: "Push webhooks · PR status checks", s: "Connected", ok: true },
@@ -10,6 +13,8 @@ const INTEG = [
 ];
 
 export default function IntegrationsPage() {
+  const { integrations, startIntegration, completeIntegration, failIntegration } = useDemo();
+  const integration = integrations.find((item) => item.changeId === "1042")!;
   return (
     <div className="space-y-4">
       <div>
@@ -24,6 +29,11 @@ export default function IntegrationsPage() {
             <Badge variant={i.ok ? "low" : "muted"} className="ml-auto">{i.s}</Badge>
           </div>
         ))}
+      </section>
+      <section className="sc-panel p-3.5" aria-label="Change integration">
+        <SectionLabel>Change #1042 integration</SectionLabel>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs"><Badge variant={integration.status === "integrated" ? "ok" : integration.status === "failed" ? "high" : "medium"}>{integration.status}</Badge><span className="text-muted-foreground">Integration state is shared with approvals, capsules, activity, and the graph.</span></div>
+        <div className="mt-3 flex gap-2"><Button size="sm" onClick={startIntegration} disabled={integration.status !== "approved"}>Start integration</Button><Button size="sm" variant="outline" onClick={completeIntegration} disabled={integration.status !== "integrating"}>Complete</Button><Button size="sm" variant="destructive" onClick={failIntegration} disabled={integration.status !== "integrating"}>Fail</Button></div>
       </section>
       <p className="text-xs text-muted-foreground"><SectionLabel>AI integrations · 12</SectionLabel><span className="mt-1 block">Patch writer, test generator, contract differ, risk classifier, and 8 repo-scoped reviewers ran in the last 24h.</span></p>
     </div>

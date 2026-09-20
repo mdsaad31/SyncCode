@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { TEAM } from "@/lib/data";
 import { useDemo } from "@/lib/store";
 
 interface NodeState {
@@ -10,7 +9,8 @@ interface NodeState {
 }
 
 export function ImpactGraph({ active = true, mini = false }: { active?: boolean; mini?: boolean }) {
-  const { activeStage, phase, kind } = useDemo();
+  const { activeStage, phase, kind, changes, team } = useDemo();
+  const change = changes.find((item) => item.id === "1042")!;
   const running = active && phase === "running";
   const done = phase === "done";
   const blocked = phase === "blocked";
@@ -49,9 +49,9 @@ export function ImpactGraph({ active = true, mini = false }: { active?: boolean;
     sara: node(3, blocked ? "affected" : "affected"),
   };
 
-  const person = (name: string) => TEAM.find((t) => t.name === name);
+  const person = (name: string) => team.find((t) => t.name === name);
 
-  const Person = ({ name, small = false }: { name: string; small?: boolean }) => {
+  const renderPerson = (name: string, small = false) => {
     const p = person(name)!;
     const lit = name === "Rahul" ? s.rahul.lit : name === "Aqib" ? s.aqib.lit : s.sara.lit;
     return (
@@ -64,7 +64,7 @@ export function ImpactGraph({ active = true, mini = false }: { active?: boolean;
     );
   };
 
-  const Node = ({ title, sub, n, mono = true }: { title: string; sub: string; n: NodeState; mono?: boolean }) => (
+  const renderNode = (title: string, sub: string, n: NodeState, mono = true) => (
     <div className={cn("rounded-lg border px-2.5 py-1.5 text-center shadow-sm transition-all duration-500", toneCls(n), mini ? "min-w-[86px]" : "min-w-[104px]")}>
       <p className={cn("text-[11px] font-semibold", mono && "sc-mono")}>{title}</p>
       <p className="mt-px text-[9px] tracking-wide text-muted-foreground uppercase">{sub}</p>
@@ -74,10 +74,10 @@ export function ImpactGraph({ active = true, mini = false }: { active?: boolean;
   return (
     <div className={cn("sc-grid-bg relative overflow-hidden rounded-lg border border-border bg-[#0d0d0f]", mini ? "p-3" : "p-4")} role="img" aria-label="Software dependency impact graph">
       <div className="relative flex flex-col items-center gap-0">
-        <Person name="Rahul" />
+        {renderPerson(change.author)}
         <p className="sc-mono mt-1 text-[9px] tracking-[0.14em] text-muted-foreground/70 uppercase">backend · changed</p>
         <svg width="2" height="18" aria-hidden><line x1="1" y1="0" x2="1" y2="18" className={edgeCls(1)} strokeWidth="2" /></svg>
-        <Node title="User API" sub="backend-api" n={s.api} />
+        {renderNode("User API", change.repo, s.api)}
         <svg width="220" height="26" viewBox="0 0 220 26" aria-hidden className="overflow-visible">
           <line x1="110" y1="0" x2="110" y2="10" className={edgeCls(2)} strokeWidth="1.5" />
           <line x1="30" y1="10" x2="190" y2="10" className={edgeCls(2)} strokeWidth="1.5" />
@@ -87,17 +87,17 @@ export function ImpactGraph({ active = true, mini = false }: { active?: boolean;
         </svg>
         <div className="flex items-start gap-2 sm:gap-3">
           <div className="flex flex-col items-center gap-1.5">
-            <Node title="Frontend" sub="frontend-web" n={s.fe} />
+            {renderNode("Frontend", change.consumers[0]?.repo ?? "frontend-web", s.fe)}
             <svg width="2" height="14" aria-hidden><line x1="1" y1="0" x2="1" y2="14" className={edgeCls(3)} strokeWidth="1.5" /></svg>
-            <Person name="Aqib" small={mini} />
+            {renderPerson(change.consumers[0]?.owner ?? "Aqib", mini)}
           </div>
           <div className="flex flex-col items-center gap-1.5">
-            <Node title="Mobile" sub="mobile-app" n={s.mob} />
+            {renderNode("Mobile", change.consumers[1]?.repo ?? "mobile-app", s.mob)}
             <svg width="2" height="14" aria-hidden><line x1="1" y1="0" x2="1" y2="14" className={edgeCls(3)} strokeWidth="1.5" /></svg>
-            <Person name="Sara" small={mini} />
+            {renderPerson(change.consumers[1]?.owner ?? "Sara", mini)}
           </div>
           <div className="flex flex-col items-center gap-1.5">
-            <Node title="Analytics" sub="worker" n={s.an} />
+            {renderNode("Analytics", change.consumers[2]?.repo ?? "worker", s.an)}
             <span className="sc-mono mt-1 hidden text-[9px] text-emerald-300/80 sm:block">healthy</span>
           </div>
         </div>

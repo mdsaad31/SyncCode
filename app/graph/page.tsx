@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { ImpactGraph } from "@/components/synccode/impact-graph";
 import { Avatar, SectionLabel } from "@/components/ui/primitives";
-import { TEAM, CHANGES } from "@/lib/data";
 import { useDemo } from "@/lib/store";
 
 export default function GraphPage() {
-  const { phase } = useDemo();
+  const { phase, changes, team } = useDemo();
+  const TEAM = team;
+  const CHANGES = changes;
   const [filter, setFilter] = useState("All");
   const [selected, setSelected] = useState("User API");
   return (

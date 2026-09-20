@@ -120,6 +120,7 @@
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
+    min-width: 320px;
   }
   ::selection {
     background: rgba(139, 124, 246, 0.28);
@@ -176,12 +177,12 @@
 .sc-panel {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
 }
 .sc-inset {
   background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
+  border-radius: calc(var(--radius) * 0.75);
 }
 .sc-mono {
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -192,6 +193,61 @@
     linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: radial-gradient(ellipse 90% 85% at 50% 30%, black 55%, transparent 100%);
+}
+
+/* Shared product rhythm: 4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48. */
+.sc-page-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+}
+.sc-page-header h1,
+main h1 {
+  font-size: 1.375rem;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+.sc-page-header p,
+main > div > header > p,
+main > div > div > h1 + p {
+  margin-top: 4px;
+  max-width: 46rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.sc-page-header-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.sc-panel > :is(header, .sc-panel-header):first-child {
+  min-height: 42px;
+}
+.sc-table-row {
+  min-height: 44px;
+}
+.sc-interactive {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.sc-interactive:hover { background-color: rgba(255, 255, 255, 0.035); }
+
+@media (max-width: 639px) {
+  .sc-page-header { align-items: flex-start; flex-direction: column; }
+  .sc-page-header-actions { width: 100%; }
+  .sc-page-header-actions > * { flex: 1; }
+}
+
+@media (max-width: 767px) {
+  .sc-workspace-grid > aside {
+    min-width: 0;
+    overflow: hidden;
+  }
 }
 
 /* Monaco diagnostic treatment: quiet enough to preserve code flow, distinct enough to signal contract drift. */

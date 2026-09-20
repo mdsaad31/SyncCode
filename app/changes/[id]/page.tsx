@@ -1,4 +1,6 @@
-import { notFound } from "next/navigation";
+"use client";
+
+import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, CircleDashed, ShieldAlert, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -8,13 +10,14 @@ import { ChangePipeline } from "@/components/synccode/pipeline";
 import { ImpactGraph } from "@/components/synccode/impact-graph";
 import { DiffView, AIExecutionLog } from "@/components/synccode/ai-log";
 import { RiskBadge } from "@/components/synccode/risk";
-import { CHANGES, TEAM } from "@/lib/data";
+import { useDemo } from "@/lib/store";
 
-export default async function ChangeDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const change = CHANGES.find((c) => c.id === id);
-  if (!change) return notFound();
-  const ownerOf = (name: string) => TEAM.find((t) => t.name === name);
+export default function ChangeDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const { changes, team, decideApproval } = useDemo();
+  const change = changes.find((c) => c.id === id);
+  if (!change) return null;
+  const ownerOf = (name: string) => team.find((t) => t.name === name);
 
   return (
     <div className="space-y-4">
@@ -122,7 +125,7 @@ export default async function ChangeDetail({ params }: { params: Promise<{ id: s
             <Separator className="my-2.5 opacity-60" />
             <div className="flex gap-2">
               <Button size="sm" asChild><Link href="/approvals">Approve integration</Link></Button>
-              <Button size="sm" variant="outline">Reject</Button>
+              <Button size="sm" variant="outline" onClick={() => decideApproval("rejected")}>Reject</Button>
             </div>
           </section>
           <section className="sc-panel p-3.5" aria-label="Log"><AIExecutionLog compact /></section>

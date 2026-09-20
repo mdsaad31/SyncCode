@@ -5,14 +5,15 @@ import Link from "next/link";
 import { FolderGit2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { REPOS } from "@/lib/data";
+import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const FILTERS = ["All", "Healthy", "Needs attention", "TypeScript"] as const;
 
 export default function ReposPage() {
+  const { repositories } = useDemo();
   const [f, setF] = useState<(typeof FILTERS)[number]>("All");
-  const rows = REPOS.filter((r) => {
+  const rows = repositories.filter((r) => {
     if (f === "All") return true;
     if (f === "Healthy") return r.status === "healthy" || r.status === "patched";
     if (f === "Needs attention") return r.status === "breaking" || r.status === "awaiting";

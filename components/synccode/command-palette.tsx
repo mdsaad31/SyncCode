@@ -5,16 +5,14 @@ import { useRouter } from "next/navigation";
 import { ArrowUpRight, Boxes, Code2, FolderGit2, GitPullRequest, Layers, Network, Play, Search, Sparkles, TestTube2, Users } from "lucide-react";
 import { Kbd } from "@/components/ui/primitives";
 import { useDemo } from "@/lib/store";
-import { CHANGES, REPOS, TEAM } from "@/lib/data";
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
-  const { runDemo } = useDemo();
+  const { runDemo, changes, repositories, team } = useDemo();
+  const CHANGES = changes;
+  const REPOS = repositories;
+  const TEAM = team;
   const [q, setQ] = useState("");
-
-  useEffect(() => {
-    if (open) setQ("");
-  }, [open ]);
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +48,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
     if (!q.trim()) return list.slice(0, 9);
     const needle = q.toLowerCase();
     return list.filter((c) => (c.label + c.hint + c.group).toLowerCase().includes(needle)).slice(0, 10);
-  }, [q, router, runDemo]);
+  }, [CHANGES, REPOS, TEAM, q, router, runDemo]);
 
   if (!open) return null;
 

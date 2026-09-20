@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CheckSquare } from "lucide-react";
-import { SectionLabel } from "@/components/ui/primitives";
 
 const TASKS = [
   { t: "Review mobile-app UserService patch", owner: "Sara", due: "today", state: "open", from: "#1042" },

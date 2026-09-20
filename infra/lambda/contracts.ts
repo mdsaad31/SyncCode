@@ -1,0 +1,2 @@
+export interface GitHubPush { ref: string; after: string; repository: { id: number; full_name: string; default_branch: string }; sender: { login: string }; head_commit?: { message?: string; author?: { name?: string } }; commits?: { added?: string[]; modified?: string[]; removed?: string[] }[]; }
+export interface ChangeRecord { repositoryId: string; changeId: string; repository: string; sha: string; branch: string; author: string; title: string; files: string[]; createdAt: string; status: "detected"; }

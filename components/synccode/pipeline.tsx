@@ -1,5 +1,5 @@
 import { Check, Loader2, Circle, OctagonX } from "lucide-react";
-import { PIPELINE_STEPS, type PipelineStage } from "@/lib/data";
+import { PIPELINE_STEPS } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 
 export function ChangePipeline({

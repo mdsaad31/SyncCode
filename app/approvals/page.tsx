@@ -8,14 +8,13 @@ import { Button } from "@/components/ui/button";
 import { SectionLabel, Separator } from "@/components/ui/primitives";
 import { DiffView } from "@/components/synccode/ai-log";
 import { RiskBadge } from "@/components/synccode/risk";
-import { CHANGES } from "@/lib/data";
 import { useDemo } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export default function ApprovalsPage() {
-  const change = CHANGES[0];
-  const { approveMobile, setApproveMobile } = useDemo();
-  const [decision, setDecision] = useState<"none" | "approved" | "rejected">("none");
+  const { changes, approvals, decideApproval } = useDemo();
+  const change = changes.find((item) => item.id === "1042")!;
+  const approval = approvals.find((item) => item.changeId === change.id)!;
   const showDiff = useState(false);
 
   return (
@@ -59,7 +58,7 @@ export default function ApprovalsPage() {
             </p>
           </div>
 
-          {(showDiff[0] || decision !== "none") && (
+          {(showDiff[0] || approval.status !== "pending") && (
             <div className="sc-rise mt-3 space-y-2">
               {change.diff.map((d) => (
                 <DiffView key={d.file} file={d.file} removed={d.removed} added={d.added} />
@@ -68,19 +67,19 @@ export default function ApprovalsPage() {
           )}
 
           <Separator className="my-3 opacity-60" />
-          {decision === "approved" || approveMobile ? (
+          {approval.status === "approved" ? (
             <div className="flex items-center gap-2 rounded-lg border border-emerald-400/25 bg-emerald-400/[0.07] p-3 text-xs text-emerald-100" role="status">
               <Check className="size-4" /> Mobile patch approved — integration queued. Sara has been notified.
             </div>
-          ) : decision === "rejected" ? (
+          ) : approval.status === "rejected" ? (
             <div className="flex items-center gap-2 rounded-lg border border-red-400/25 bg-red-400/[0.07] p-3 text-xs text-red-100" role="status">
               <X className="size-4" /> Change sent back to Rahul with AI-generated context attached.
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={() => showDiff[1](!showDiff[0])}>{showDiff[0] ? "Hide diff" : "Review diff"}</Button>
-              <Button size="sm" onClick={() => { setDecision("approved"); setApproveMobile(true); }}><Check className="size-3.5" /> Approve</Button>
-              <Button size="sm" variant="destructive" onClick={() => setDecision("rejected")}><X className="size-3.5" /> Reject</Button>
+              <Button size="sm" onClick={() => decideApproval("approved")}><Check className="size-3.5" /> Approve</Button>
+              <Button size="sm" variant="destructive" onClick={() => decideApproval("rejected")}><X className="size-3.5" /> Reject</Button>
             </div>
           )}
         </section>

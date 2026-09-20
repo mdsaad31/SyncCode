@@ -6,19 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, SectionLabel, Separator } from "@/components/ui/primitives";
 import { RiskBadge } from "./risk";
-import { TEAM, type SyncChange } from "@/lib/data";
+import type { SyncChange } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 import { useDemo } from "@/lib/store";
 
-function ownerColor(name: string) {
-  return TEAM.find((t) => t.name === name)?.color ?? "#9b9ba1";
-}
-function ownerInitials(name: string) {
-  return TEAM.find((t) => t.name === name)?.initials ?? name.slice(0, 2).toUpperCase();
-}
-
 export function ChangeCapsule({ change, featured = false }: { change: SyncChange; featured?: boolean }) {
-  const { phase, kind } = useDemo();
+  const { phase, team } = useDemo();
+  const owner = team.find((member) => member.name === change.author);
   const live = phase === "running" && change.num === 1042;
   return (
     <article
@@ -52,7 +46,7 @@ export function ChangeCapsule({ change, featured = false }: { change: SyncChange
           {change.from} <span className="text-muted-foreground">→</span> {change.to}
         </h3>
         <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Avatar initials={ownerInitials(change.author)} color={ownerColor(change.author)} className="size-5 text-[9px]" />
+          <Avatar initials={owner?.initials ?? change.author.slice(0, 2).toUpperCase()} color={owner?.color ?? "#9b9ba1"} className="size-5 text-[9px]" />
           <span><strong className="font-medium text-foreground/90">{change.author}</strong> changed the {change.repo === "backend-api" ? "User response contract" : "contract"} · {change.time}</span>
         </p>
 
@@ -106,6 +100,8 @@ export function ChangeCapsule({ change, featured = false }: { change: SyncChange
             </li>
           ))}
         </ul>
+
+        {change.num === 1042 && <div className="mt-3 grid grid-cols-[1fr_auto] gap-3 border-t border-white/[0.06] pt-3 text-[11px]"><div><SectionLabel>Capabilities used</SectionLabel><p className="mt-1 text-muted-foreground">Git · TypeScript · Test Runner</p></div><div className="text-right"><SectionLabel>Decision</SectionLabel><p className="mt-1 font-medium text-emerald-200">Safe to integrate</p></div></div>}
 
         <Separator className="my-3 opacity-60" />
 
